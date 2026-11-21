@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { AvailableParticipant, PublicRoom } from "@/lib/contracts";
 import { nameKey } from "@/lib/validation";
+import { FestiveMark } from "./festive-mark";
 
 const PAGE_SIZE = 75;
 
@@ -44,7 +45,7 @@ export function RoomExperience({ slug, initialRoom }: { slug: string; initialRoo
       setRoom(fresh);
       setSelected((id) => fresh.availableParticipants.some((item) => item.id === id) ? id : "");
     } catch {
-      setNotice((previous) => [previous, "A lista não pôde ser atualizada. Tente novamente."].filter(Boolean).join(" "));
+      setNotice((previous) => previous || "A lista não pôde ser atualizada. Tente novamente.");
     } finally {
       setRefreshing(false);
     }
@@ -94,6 +95,7 @@ export function RoomExperience({ slug, initialRoom }: { slug: string; initialRoo
   return (
     <div className="page-shell">
       <header className="page-heading">
+        <FestiveMark kind="gift" />
         <h1 ref={roomHeading} tabIndex={-1}>{room.name}</h1>
         <label className="progress-label" htmlFor="room-progress">{room.totalParticipants - room.pendingCount} de {room.totalParticipants} revelaram</label>
         <progress id="room-progress" max={room.totalParticipants} value={room.totalParticipants - room.pendingCount} />
@@ -104,6 +106,8 @@ export function RoomExperience({ slug, initialRoom }: { slug: string; initialRoo
 
       {result ? (
         <section className="card result-card stack">
+          <div className="result-sparkles" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div>
+          <FestiveMark kind="sparkles" warm />
           <h2 ref={resultHeading} tabIndex={-1}>Você tirou <strong>{result}</strong></h2>
           <p>Guarde este nome em segredo. Anote antes de ocultar ou sair. O resultado aparece uma única vez.</p>
           <button className="button secondary" type="button" onClick={() => {
@@ -113,6 +117,7 @@ export function RoomExperience({ slug, initialRoom }: { slug: string; initialRoo
         </section>
       ) : room.status === "closed" ? (
         <section className="card closed-card stack">
+          <FestiveMark kind="celebration" />
           <h2>Sala encerrada</h2>
           <p>Todos já revelaram seu Amigo Secreto. Que venha a troca de presentes!</p>
         </section>

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type SubmitEvent } from "react";
 import type { CreatedRoom } from "@/lib/contracts";
 import { ROOM_BODY_BYTES, tidyName, validateRoom } from "@/lib/validation";
 import { CopyLink } from "./copy-link";
+import { FestiveMark } from "./festive-mark";
 
 export function CreateForm() {
   const [name, setName] = useState("");
@@ -62,6 +63,7 @@ export function CreateForm() {
   if (created) {
     return (
       <section className="card stack">
+        <FestiveMark kind="celebration" />
         <h2 ref={heading} tabIndex={-1}>Sala criada!</h2>
         <p>O sorteio de {created.totalParticipants} participantes está pronto.</p>
         <CopyLink title="Link público" url={created.roomUrl} action="Copiar link público" description="Envie este mesmo link para toda a turma." />

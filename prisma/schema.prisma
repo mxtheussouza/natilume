@@ -1,0 +1,33 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Room {
+  id             String        @id @db.Uuid
+  name           String
+  publicSlug     String        @unique
+  adminTokenHash String        @unique
+  createdAt      DateTime      @default(now())
+  participants   Participant[]
+}
+
+model Participant {
+  id                   String       @id @db.Uuid
+  roomId               String       @db.Uuid
+  room                 Room         @relation(fields: [roomId], references: [id], onDelete: Restrict)
+  name                 String
+  normalizedName       String
+  drawnToParticipantId String       @unique @db.Uuid
+  drawnTo              Participant  @relation("Draw", fields: [drawnToParticipantId], references: [id], onDelete: NoAction)
+  drawnBy              Participant? @relation("Draw")
+  revealedAt           DateTime?
+  createdAt            DateTime     @default(now())
+
+  @@unique([roomId, normalizedName])
+  @@index([roomId, revealedAt])
+}

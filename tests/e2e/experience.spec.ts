@@ -91,3 +91,40 @@ test("cria e copia um link público, revela por teclado e encerra a sala", async
     await guest.close();
   }
 });
+
+test("consulta o painel secreto e atualiza o andamento após recarregar", async ({ page, request, context }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+  await page.setViewportSize({ width: 320, height: 850 });
+  const created = await request.post("/api/rooms", {
+    data: { name: "Festa de Natal", participants: ["Daniela", "Ester"] },
+  });
+  expect(created.status()).toBe(201);
+  const { adminUrl, roomUrl } = await created.json();
+  const room = await request.get(new URL(roomUrl).pathname.replace("/sala/", "/api/rooms/"));
+  const { availableParticipants } = await room.json();
+  const slug = new URL(roomUrl).pathname.split("/").at(-1);
+
+  const panel = await page.goto(adminUrl);
+  expect(panel?.status()).toBe(200);
+  expect(panel?.headers()["cache-control"]).toContain("no-store");
+  expect(panel?.headers()["referrer-policy"]).toBe("no-referrer");
+  expect(panel?.headers()["x-robots-tag"]).toContain("noindex");
+  await expect(page.getByText("Guarde o endereço deste painel só para você.", { exact: false })).toBeVisible();
+  await expect(page.getByRole("row", { name: "Daniela Pendente" })).toBeVisible();
+  await expectNoHorizontalOverflow(page);
+  await expectAccessible(page);
+  await page.getByRole("button", { name: "Copiar link público" }).click();
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(roomUrl);
+
+  const reveal = await request.post(`/api/rooms/${slug}/reveal`, { data: { participantId: availableParticipants[0].id } });
+  expect(reveal.status()).toBe(200);
+  await page.reload();
+  await expect(page.getByRole("row", { name: "Daniela Revelou" })).toBeVisible();
+  await expect(page.getByRole("row", { name: "Ester Pendente" })).toBeVisible();
+
+  for (const invalidToken of [slug, randomUUID().replaceAll("-", "")]) {
+    const invalid = await page.goto(`/admin/${invalidToken}`);
+    expect(invalid?.status()).toBe(404);
+    await expect(page.getByRole("heading", { name: "Página não encontrada" })).toBeVisible();
+  }
+});

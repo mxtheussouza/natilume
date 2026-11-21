@@ -13,3 +13,12 @@ export type CreatedRoom = {
   adminUrl: string;
   totalParticipants: number;
 };
+
+export type AdminRoom = {
+  name: string;
+  totalParticipants: number;
+  revealedCount: number;
+  pendingCount: number;
+  participants: { name: string; revealed: boolean }[];
+  publicUrl: string;
+};

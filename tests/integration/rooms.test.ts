@@ -3,6 +3,7 @@ import { afterAll, beforeAll, expect, it } from "vitest";
 import { POST as createHandler } from "@/app/api/rooms/route";
 import { GET as getRoomHandler } from "@/app/api/rooms/[slug]/route";
 import { POST as revealHandler } from "@/app/api/rooms/[slug]/reveal/route";
+import { GET as getAdminHandler } from "@/app/api/admin/[adminToken]/route";
 import type { CreatedRoom, PublicRoom } from "@/lib/contracts";
 import { getDb } from "@/server/db";
 
@@ -118,4 +119,31 @@ it("recusa JSON malformado e corpos grandes sem depender de Content-Length", asy
   expect(invalid.status).toBe(400);
   const oversized = await createHandler(new Request(origin, { method: "POST", headers, body: "a".repeat(256 * 1024 + 1) }));
   expect(oversized.status).toBe(413);
+});
+
+it("reserva o andamento nominal ao token administrativo sem expor pares", async () => {
+  const { name, slug, secret, links } = await create(2);
+  const request = (adminToken: string) => getAdminHandler(new Request(origin), { params: Promise.resolve({ adminToken }) });
+  const { availableParticipants } = await read(slug);
+  const [first, second] = availableParticipants;
+  await reveal(slug, first.id);
+
+  const admin = await request(secret);
+  expect(admin.status).toBe(200);
+  expect(admin.headers.get("cache-control")).toContain("no-store");
+  expect(admin.headers.get("referrer-policy")).toBe("no-referrer");
+  expect(await admin.json()).toEqual({
+    name,
+    totalParticipants: 2,
+    revealedCount: 1,
+    pendingCount: 1,
+    participants: [{ name: first.name, revealed: true }, { name: second.name, revealed: false }],
+    publicUrl: links.roomUrl,
+  });
+  for (const token of [slug, randomUUID().replaceAll("-", ""), "inválido"]) {
+    const forbidden = await request(token);
+    expect(forbidden.status).toBe(404);
+    expect(await forbidden.json()).toEqual({ error: "Painel não encontrado." });
+  }
+  expect((await read(slug)).availableParticipants).toEqual([second]);
 });

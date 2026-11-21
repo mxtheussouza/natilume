@@ -4,8 +4,8 @@ O repositório começou com as especificações e sem código da aplicação.
 
 1. MVP concluído. Inicializar Next.js e PostgreSQL com Prisma, depois implementar criação, consulta e revelação e validar com banco real.
 2. Interface natalina concluída. Aplicar o sistema visual e verificar responsividade, teclado e movimento reduzido.
-3. Administração em andamento. Implementar painel por segredo e verificar a separação entre as rotas.
-4. Qualidade e deploy pendentes. Executar a suíte completa, automatizar verificações e documentar a implantação.
+3. Administração concluída. Implementar painel por segredo e verificar a separação entre as rotas.
+4. Qualidade e deploy em andamento. Executar a suíte completa, automatizar verificações e documentar a implantação.
 
 A entrega será preparada neste checkout para implantação em Node.js com PostgreSQL.
 
@@ -22,3 +22,10 @@ A entrega será preparada neste checkout para implantação em Node.js com Postg
 - Ilustração original em SVG, paleta pinheiro, cereja e creme, fontes Fraunces e DM Sans servidas localmente e ícones Lucide.
 - Formulário com prévia, diálogo nativo com confirmação, estados de erro e encerramento, e cartão de revelação com foco e movimento reduzido.
 - Lint, typecheck, build, 28 testes unitários e de integração e 5 cenários Playwright passaram. Foram verificados 320, 375, 768 e 1440 px, contraste automatizado com axe, navegação por teclado, foco, cópia do link e abertura em contexto limpo. Home inspecionada visualmente a 375 e 1440 px.
+
+## Etapa 3 — Administração
+
+- Painel e API consultam o andamento pelo hash do token secreto. Exibem apenas nomes, status e totais. A lista tem busca e paginação para salas grandes e os totais são atualizados ao recarregar.
+- O criador pode copiar os dois endereços após a criação e abrir o painel em outra aba. Na V1, edição, cancelamento e novo sorteio de uma sala existente ficam fora do painel. Uma correção pede a criação de nova sala. As relações no banco impedem exclusão acidental de salas com participantes.
+- A validação do link acontece antes de iniciar a resposta das rotas dinâmicas, permitindo devolver HTTP 404 também em HTML. O carregamento durante a navegação para o formulário tem fallback próprio.
+- Lint, typecheck, build, 29 casos de Vitest e 6 cenários Playwright passaram. Confirmados HTTP 404 para slug público e token inexistente no painel, cabeçalhos privados, cópia e atualização após revelação.

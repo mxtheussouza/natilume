@@ -67,7 +67,8 @@ export function CreateForm() {
         <h2 ref={heading} tabIndex={-1}>Sala criada!</h2>
         <p>O sorteio de {created.totalParticipants} participantes está pronto.</p>
         <CopyLink title="Link público" url={created.roomUrl} action="Copiar link público" description="Envie este mesmo link para toda a turma." />
-        <CopyLink title="Link administrativo secreto" url={created.adminUrl} action="Copiar link secreto" description="Guarde este link só para você. Ele dá acesso ao andamento da sala e é a única forma de abrir o painel." />
+        <CopyLink title="Link administrativo secreto" url={created.adminUrl} action="Copiar link secreto" description="Guarde este link só para você. Ele dá acesso ao andamento da sala e é a única forma de abrir o painel. Se você perdê-lo, não há como recuperá-lo." />
+        <a className="button primary" href={created.adminUrl} target="_blank" rel="noreferrer">Abrir painel em outra aba</a>
       </section>
     );
   }

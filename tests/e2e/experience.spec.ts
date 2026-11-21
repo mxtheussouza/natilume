@@ -62,6 +62,13 @@ test("cria e copia um link público, revela por teclado e encerra a sala", async
     await room.keyboard.press("Enter");
     const dialog = room.getByRole("dialog", { name: "Você é Clara?" });
     await expect(dialog).toBeVisible();
+    await expect(dialog).toMatchAriaSnapshot(`
+      - dialog "Você é Clara?":
+        - heading "Você é Clara?" [level=2]
+        - paragraph
+        - button "Voltar"
+        - button "Confirmar e revelar"
+    `);
     await expect(dialog.getByRole("button", { name: "Voltar" })).toBeFocused();
     await expectAccessible(room);
     await room.keyboard.press("Escape");

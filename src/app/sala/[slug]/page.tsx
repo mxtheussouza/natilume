@@ -13,5 +13,5 @@ export default async function RoomPage({ params }: { params: Promise<{ slug: str
     throw new Error("Falha ao carregar sala.");
   });
   if (!room) notFound();
-  return <RoomExperience slug={slug} initialRoom={room} />;
+  return <RoomExperience key={slug} slug={slug} initialRoom={room} />;
 }

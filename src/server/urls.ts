@@ -13,5 +13,12 @@ export function hashAdminToken(token: string) {
 }
 
 export function appUrl(path: string) {
-  return new URL(path, process.env.APP_URL ?? "http://localhost:3000").href;
+  const configured = process.env.APP_URL;
+  if (!configured && process.env.NODE_ENV === "production") throw new Error("Configure APP_URL.");
+  const origin = new URL(configured ?? "http://localhost:3000");
+  if (!["https:", "http:"].includes(origin.protocol) || origin.username || origin.password
+    || origin.pathname !== "/" || origin.search || origin.hash) {
+    throw new Error("APP_URL deve conter só a origem pública.");
+  }
+  return new URL(path, origin).href;
 }

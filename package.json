@@ -6,7 +6,7 @@
     "node": "^24.11.0"
   },
   "scripts": {
-    "postinstall": "prisma generate",
+    "postinstall": "node scripts/generate-name-folding.mjs && prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -36,6 +36,7 @@
     "@types/node": "24.19.2",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@unicode/unicode-17.0.0": "2.1.0",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.6",
     "prisma": "7.10.1",

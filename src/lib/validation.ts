@@ -1,3 +1,5 @@
+import simpleCaseFolding from "@/generated/unicode-simple-fold.json";
+
 export const ROOM_NAME_LENGTH = 100;
 export const PARTICIPANT_NAME_LENGTH = 80;
 export const ROOM_BODY_BYTES = 256 * 1024;
@@ -6,12 +8,16 @@ export function tidyName(name: string) {
   return name.normalize("NFC").replace(/\s+/gu, " ").trim();
 }
 
+const caseMapping: Readonly<Record<string, string | undefined>> = simpleCaseFolding;
+
 export function nameKey(name: string) {
-  return tidyName(name).toLocaleLowerCase("pt-BR").normalize("NFC");
+  return Array.from(tidyName(name), (character) => caseMapping[character] ?? character).join("").normalize("NFC");
 }
 
 function validName(value: string, max: number) {
-  return value.length > 0 && Array.from(value).length <= max && !/[\p{Cc}\p{Cs}]/u.test(value);
+  return Array.from(value).length <= max
+    && /[^\p{Default_Ignorable_Code_Point}\p{M}\s]/u.test(value)
+    && !/[\p{Cc}\p{Cs}\p{Bidi_Control}]/u.test(value);
 }
 
 type RoomInput = { name: string; participants: { name: string; normalizedName: string }[] };

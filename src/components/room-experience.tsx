@@ -84,7 +84,7 @@ export function RoomExperience({ slug, initialRoom }: { slug: string; initialRoo
         throw new Error();
       }
     } catch {
-      setNotice("A conexão interrompeu a resposta. Se a revelação foi registrada, o resultado só podia aparecer naquela resposta. Atualize a lista para conferir seu nome.");
+      setNotice("Não foi possível confirmar a revelação. Se a revelação foi registrada, o resultado só podia aparecer naquela resposta. Atualize a lista para conferir seu nome.");
       return;
     } finally {
       setBusy(false);
@@ -125,7 +125,7 @@ export function RoomExperience({ slug, initialRoom }: { slug: string; initialRoo
         <section className="card stack">
           <h2>Escolha seu nome</h2>
           <p>Cada nome dá direito a uma única revelação.</p>
-          {room.availableParticipants.length > 12 && (
+          {(room.availableParticipants.length > 12 || query.length > 0) && (
             <div className="field">
               <label htmlFor="name-search">Buscar nome</label>
               <input id="name-search" type="search" value={query} disabled={busy} onChange={(event) => {

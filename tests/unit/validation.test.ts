@@ -19,9 +19,17 @@ describe("validação da sala", () => {
     { name: "Natal", participants: ["Ana", "a".repeat(81)] },
     { name: "Natal", participants: ["Ana", "\u0000Bia"] },
     { name: "Natal", participants: ["Ana", "\ud800"] },
+    { name: "Natal", participants: ["Ana", "\u200d"] },
+    { name: "Natal", participants: ["Ana", "Bia\u202e"] },
     { name: "Natal", participants: ["José da Silva", " JOSE\u0301  DA SILVA "] },
   ])("rejeita entrada inválida %j", (input) => {
     expect(validateRoom(input).error).toBeTruthy();
+  });
+
+  it("reconhece variações de caixa Unicode preservando grafias distintas", () => {
+    expect(nameKey("Κώστας")).toBe(nameKey("ΚΏΣΤΑΣ"));
+    expect(nameKey("Straße")).not.toBe(nameKey("Strasse"));
+    expect(nameKey("I")).not.toBe(nameKey("ı"));
   });
 
   it("distingue nomes acentuados de nomes sem acento", () => {

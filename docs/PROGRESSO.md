@@ -49,3 +49,8 @@ A entrega será preparada neste checkout para implantação em Node.js com Postg
 
 - `GET /api/health` verifica a conexão usada pela aplicação com `SELECT 1`. Responde sem cache e registra o diagnóstico de falhas somente no servidor.
 - O build servido localmente retornou HTTP 200 com PostgreSQL real e HTTP 503 com um endereço de banco inacessível. Passaram lint, typecheck, build, 32 testes unitários e de integração e 13 cenários Playwright.
+
+## Download da revelação
+
+- O cartão revelado ganhou a ação **Baixar imagem**. O navegador gera `meu-amigo-secreto.png` a partir do destinatário em memória, com quebra de linha para nomes longos. O botão só aparece enquanto o resultado está visível.
+- Lint, typecheck, build, 32 testes unitários e de integração e 13 cenários Playwright passaram. O teste de navegador baixou um PNG pelo teclado e confirmou que a ação some ao ocultar ou recarregar. O download também foi verificado sem conexão em um viewport de 320 px, com um nome longo contendo acentos e emoji.

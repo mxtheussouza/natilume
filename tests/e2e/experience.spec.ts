@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
 
@@ -116,15 +117,26 @@ test("cria e copia um link público, revela por teclado e encerra a sala", async
     await expect(dialog.getByRole("button", { name: "Confirmar e revelar" })).toBeFocused();
     await room.keyboard.press("Enter");
     const result = room.getByRole("heading", { name: "Você tirou Lívia" });
+    const downloadButton = room.getByRole("button", { name: "Baixar imagem" });
     await expect(result).toBeFocused();
-    await expect(room.getByText(/Anote antes de ocultar/)).toBeVisible();
+    await expect(room.getByText(/Baixe a imagem ou anote o nome/)).toBeVisible();
     await expect(room.locator(".result-card")).toHaveCSS("animation-name", "none");
     await expectNoHorizontalOverflow(room);
     await expectAccessible(room);
+    await room.keyboard.press("Tab");
+    await expect(downloadButton).toBeFocused();
+    const [download] = await Promise.all([room.waitForEvent("download"), room.keyboard.press("Enter")]);
+    expect(download.suggestedFilename()).toBe("meu-amigo-secreto.png");
+    const png = await readFile(await download.path());
+    expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+    expect(png.readUInt32BE(16)).toBe(1080);
+    await expect(result).toBeVisible();
     await room.getByRole("button", { name: "Ocultar resultado" }).click();
     await expect(result).toHaveCount(0);
+    await expect(downloadButton).toHaveCount(0);
     await room.reload();
     await expect(result).toHaveCount(0);
+    await expect(downloadButton).toHaveCount(0);
     await expect(room.getByRole("option", { name: "Clara" })).toHaveCount(0);
     await room.getByLabel("Seu nome").selectOption({ label: "Lívia" });
     await reveal.click();

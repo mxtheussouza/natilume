@@ -44,3 +44,8 @@ A entrega será preparada neste checkout para implantação em Node.js com Postg
 - O deploy na Vercel retornou HTTP 400 para JSON malformado e HTTP 500 tanto para uma criação válida quanto para uma consulta pública que lê o banco. A mesma aplicação, executada localmente com o Supabase configurado no checkout, criou uma sala fictícia com HTTP 201 e confirmou a consulta pública e administrativa com HTTP 200. A causa específica da falha de acesso ao banco do deploy depende dos logs e da configuração da Vercel.
 - O formulário sincroniza a prévia com o texto digitado antes da hidratação e mostra o erro recebido da API. As rotas registram o nome da operação e o problema de configuração ou código reconhecido sem nomes, tokens ou credenciais. O `.env.example` voltou a usar a configuração local documentada.
 - Lint, typecheck, build, 32 testes unitários e de integração e 12 cenários Playwright passaram. As duas regressões de interface também passaram em desenvolvimento. O build de produção servido localmente com `DATABASE_URL` vazia reproduziu os dois 500 e registrou a variável ausente no log.
+
+## Verificação da conexão com o banco
+
+- `GET /api/health` verifica a conexão usada pela aplicação com `SELECT 1`. Responde sem cache e registra o diagnóstico de falhas somente no servidor.
+- O build servido localmente retornou HTTP 200 com PostgreSQL real e HTTP 503 com um endereço de banco inacessível. Passaram lint, typecheck, build, 32 testes unitários e de integração e 13 cenários Playwright.

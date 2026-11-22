@@ -26,12 +26,16 @@ function diagnosticCode(error: unknown) {
   }
 }
 
-export function errorResponse(error: unknown, operation: string) {
-  if (error instanceof InputError) return json({ error: error.message }, error.status);
+export function logInternalError(error: unknown, operation: string) {
   const details = error instanceof ConfigurationError
     ? { variable: error.variable, problem: error.problem }
     : { code: diagnosticCode(error) ?? "unknown" };
   console.error("[natilume] Falha interna.", { operation, ...details });
+}
+
+export function errorResponse(error: unknown, operation: string) {
+  if (error instanceof InputError) return json({ error: error.message }, error.status);
+  logInternalError(error, operation);
   return json({ error: "O serviço está indisponível agora. Tente atualizar a página." }, 500);
 }
 

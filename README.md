@@ -69,7 +69,9 @@ A suíte automatizada verifica semântica, contraste, ordem de foco, teclado e m
 
 ### Falha HTTP 500 ao criar uma sala
 
-Consulte os logs da função `POST /api/rooms`. O evento `[natilume] Falha interna.` informa a variável com problema ou um código reconhecido do Prisma ou da conexão. Se a consulta pública também retornar 500 para um slug válido, verifique primeiro `DATABASE_URL`, a conectividade e as migrações no banco usado pelo deploy. A criação também exige `APP_URL` com a origem pública. Na Vercel, confira as variáveis do ambiente **Production** e faça um novo deploy após alterá-las. [Variáveis de ambiente na Vercel](https://vercel.com/docs/environment-variables)
+Abra `/api/health` no domínio do deploy. A rota executa `SELECT 1` usando a conexão da aplicação. HTTP 200 com `database: "connected"` confirma a conexão. HTTP 503 com `database: "unavailable"` indica falha de acesso. Consulte o evento `[natilume] Falha interna.` de `GET /api/health` ou `POST /api/rooms` para ver a variável com problema ou um código reconhecido do Prisma ou da conexão.
+
+Se a conexão estiver funcionando e a criação ainda falhar, verifique as migrações no banco usado pelo deploy e confirme que `APP_URL` contém a origem pública. Na Vercel, confira as variáveis do ambiente **Production** e faça um novo deploy após alterá-las. [Variáveis de ambiente na Vercel](https://vercel.com/docs/environment-variables)
 
 ## Limites operacionais
 

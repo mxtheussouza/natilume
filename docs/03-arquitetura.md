@@ -17,6 +17,7 @@ Use versões estáveis compatíveis no momento do desenvolvimento, documentando 
 - `/not-found` ou estados equivalentes — URL inexistente/inválida.
 
 ## Contratos HTTP propostos
+- `GET /api/health` executa `SELECT 1` com a conexão da aplicação e responde sem cache. Retorna HTTP 200 com `{status: "ok", database: "connected"}` ou HTTP 503 com `{status: "error", database: "unavailable"}`.
 - `POST /api/rooms`: `{name, participants: string[]}`; resposta `{roomUrl, adminUrl, totalParticipants}`. Gerar e persistir atribuições na mesma transação de criação.
 - `GET /api/rooms/[slug]`: `{name, totalParticipants, pendingCount, availableParticipants:[{id,name}], status}`. Nenhuma atribuição, nenhum `drawnToParticipantId`, nenhum token admin.
 - `POST /api/rooms/[slug]/reveal`: `{participantId}`; sucesso 200 `{recipientName}` **somente para a primeira requisição vencedora**; 409 se já revelou; 400 entrada inválida; 404 se não pertence à sala. Todas sem cache.

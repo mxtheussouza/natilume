@@ -3,7 +3,7 @@
 import { Download } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { AvailableParticipant, PublicRoom } from "@/lib/contracts";
-import { downloadResultImage } from "@/lib/result-image";
+import { saveResultImage } from "@/lib/result-image";
 import { nameKey } from "@/lib/validation";
 import { FestiveMark } from "./festive-mark";
 
@@ -15,7 +15,8 @@ export function RoomExperience({ slug, initialRoom }: { slug: string; initialRoo
   const [visible, setVisible] = useState(PAGE_SIZE);
   const [selected, setSelected] = useState("");
   const [result, setResult] = useState<string>();
-  const [downloadError, setDownloadError] = useState(false);
+  const [saveImageError, setSaveImageError] = useState(false);
+  const [showPngDownload, setShowPngDownload] = useState(false);
   const [busy, setBusy] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [notice, setNotice] = useState("");
@@ -62,13 +63,13 @@ export function RoomExperience({ slug, initialRoom }: { slug: string; initialRoo
     setSelected("");
   }
 
-  function downloadResult() {
+  async function saveImage(mode: "automatic" | "download") {
     if (!result) return;
+    setSaveImageError(false);
     try {
-      downloadResultImage(result);
-      setDownloadError(false);
+      if (await saveResultImage(result, mode) === "native") setShowPngDownload(true);
     } catch {
-      setDownloadError(true);
+      setSaveImageError(true);
     }
   }
 
@@ -122,19 +123,22 @@ export function RoomExperience({ slug, initialRoom }: { slug: string; initialRoo
           <div className="result-sparkles" aria-hidden="true"><span>✦</span><span>✧</span><span>✦</span><span>✧</span></div>
           <FestiveMark kind="sparkles" warm />
           <h2 ref={resultHeading} tabIndex={-1}>Você tirou <strong>{result}</strong></h2>
-          <p>Guarde este nome em segredo. Baixe a imagem ou anote o nome antes de sair. O resultado aparece uma única vez.</p>
+          <p>Guarde este nome em segredo. Salve a imagem ou anote o nome antes de sair. O resultado aparece uma única vez.</p>
           <div className="actions result-actions">
-            <button className="button primary" type="button" onClick={downloadResult}>
+            <button className="button primary" type="button" onClick={() => saveImage("automatic")}>
               <Download size={19} aria-hidden="true" />
-              Baixar imagem
+              Salvar imagem
             </button>
+            {showPngDownload && <button className="button secondary" type="button" onClick={() => saveImage("download")}>Baixar PNG</button>}
             <button className="button secondary" type="button" onClick={() => {
               setResult(undefined);
-              setDownloadError(false);
+              setSaveImageError(false);
+              setShowPngDownload(false);
               roomHeading.current?.focus();
             }}>Ocultar resultado</button>
           </div>
-          {downloadError && <p className="notice error" role="alert">Não foi possível baixar a imagem. Tente novamente ou anote o nome.</p>}
+          <p className="hint result-mobile-hint">Se o menu do celular abrir, escolha a opção de salvar na galeria.</p>
+          {saveImageError && <p className="notice error" role="alert">Não foi possível salvar a imagem. Tente novamente ou anote o nome.</p>}
         </section>
       ) : room.status === "closed" ? (
         <section className="card closed-card stack">

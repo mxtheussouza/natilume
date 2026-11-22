@@ -186,6 +186,10 @@ progress::-moz-progress-bar { background: var(--pine); border-radius: 2rem; }
 .result-card h2, .result-card p { z-index: 1; }
 .result-card strong { display: block; color: var(--cherry); font-size: clamp(2.15rem, 6vw, 4rem); margin-top: .3rem; }
 .result-actions { justify-content: center; z-index: 1; }
+.result-mobile-hint { display: none; max-width: 34ch; }
+@media (pointer: coarse) {
+  .result-mobile-hint { display: block; }
+}
 .result-sparkles { position: absolute; inset: 0; color: #9a6424; pointer-events: none; }
 .result-sparkles span { position: absolute; animation: sparkle .65s ease-out both; }
 .result-sparkles span:nth-child(1) { top: 13%; left: 12%; }

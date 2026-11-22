@@ -90,6 +90,9 @@ test("cria e copia um link público, revela por teclado e encerra a sala", async
 
   const guest = await browser.newContext({ viewport: { width: 320, height: 780 }, reducedMotion: "reduce", isMobile: true, hasTouch: true });
   try {
+    await guest.addInitScript(() => {
+      Object.defineProperty(navigator, "canShare", { value: () => false });
+    });
     const room = await guest.newPage();
     await room.goto(roomUrl);
     await expectNoHorizontalOverflow(room);
@@ -117,9 +120,9 @@ test("cria e copia um link público, revela por teclado e encerra a sala", async
     await expect(dialog.getByRole("button", { name: "Confirmar e revelar" })).toBeFocused();
     await room.keyboard.press("Enter");
     const result = room.getByRole("heading", { name: "Você tirou Lívia" });
-    const downloadButton = room.getByRole("button", { name: "Baixar imagem" });
+    const downloadButton = room.getByRole("button", { name: "Salvar imagem" });
     await expect(result).toBeFocused();
-    await expect(room.getByText(/Baixe a imagem ou anote o nome/)).toBeVisible();
+    await expect(room.getByText(/Salve a imagem ou anote o nome/)).toBeVisible();
     await expect(room.locator(".result-card")).toHaveCSS("animation-name", "none");
     await expectNoHorizontalOverflow(room);
     await expectAccessible(room);
@@ -147,6 +150,50 @@ test("cria e copia um link público, revela por teclado e encerra a sala", async
   } finally {
     await guest.close();
   }
+});
+
+test.describe("imagem da revelação no celular", () => {
+  test.use({ isMobile: true, hasTouch: true, viewport: { width: 375, height: 812 } });
+
+  test("entrega o PNG ao menu nativo no toque", async ({ page, request }) => {
+    const created = await request.post("/api/rooms", {
+      data: { name: "Natal de teste", participants: ["Nina", "Sofia"] },
+    });
+    expect(created.status()).toBe(201);
+    const { roomUrl } = await created.json();
+
+    await page.addInitScript(() => {
+      Object.defineProperty(navigator, "canShare", {
+        value: ({ files }: ShareData) => files?.length === 1 && files[0].type === "image/png",
+      });
+      Object.defineProperty(navigator, "share", {
+        value: async ({ files }: ShareData) => {
+          const file = files?.[0];
+          if (!file) throw new Error("PNG ausente.");
+          const active = navigator.userActivation.isActive;
+          const signature = new Uint8Array(await file.slice(0, 8).arrayBuffer());
+          document.documentElement.dataset.sharedImage = JSON.stringify({
+            name: file.name, type: file.type, active, signature: Array.from(signature),
+          });
+        },
+      });
+    });
+
+    await page.goto(roomUrl);
+    await page.getByLabel("Seu nome").selectOption({ label: "Nina" });
+    await page.getByRole("button", { name: "Revelar meu Amigo Secreto" }).tap();
+    await page.getByRole("button", { name: "Confirmar e revelar" }).tap();
+    await expect(page.getByText(/escolha a opção de salvar na galeria/)).toBeVisible();
+    await page.getByRole("button", { name: "Salvar imagem" }).tap();
+    await expect(page.locator("html")).toHaveAttribute("data-shared-image", JSON.stringify({
+      name: "meu-amigo-secreto.png", type: "image/png", active: true, signature: [137, 80, 78, 71, 13, 10, 26, 10],
+    }));
+    const [download] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByRole("button", { name: "Baixar PNG" }).tap(),
+    ]);
+    expect(download.suggestedFilename()).toBe("meu-amigo-secreto.png");
+  });
 });
 
 test("consulta o painel secreto e atualiza o andamento após recarregar", async ({ page, request, context }) => {

@@ -2,6 +2,9 @@ const WIDTH = 1080;
 const NAME_WIDTH = 840;
 const NAME_FONT = '700 84px "Fraunces Variable", Georgia, serif';
 const LINE_HEIGHT = 104;
+const PNG_TYPE = "image/png";
+const PNG_PREFIX = `data:${PNG_TYPE};base64,`;
+const FILE_NAME = "meu-amigo-secreto.png";
 
 function wrapName(context: CanvasRenderingContext2D, name: string) {
   const characters = typeof Intl.Segmenter === "function"
@@ -31,7 +34,7 @@ function wrapName(context: CanvasRenderingContext2D, name: string) {
   return lines;
 }
 
-export function downloadResultImage(recipientName: string) {
+function renderResultImage(recipientName: string) {
   const canvas = document.createElement("canvas");
   canvas.width = WIDTH;
   const context = canvas.getContext("2d");
@@ -76,16 +79,46 @@ export function downloadResultImage(recipientName: string) {
   context.font = '550 30px "DM Sans Variable", system-ui, sans-serif';
   context.fillText("Guarde este nome em segredo.", center, height - 103);
 
-  // Dispara o download no mesmo clique, usando apenas os dados do cartão atual.
-  const image = canvas.toDataURL("image/png");
-  if (!image.startsWith("data:image/png;base64,")) throw new Error("PNG indisponível.");
+  const image = canvas.toDataURL(PNG_TYPE);
+  if (!image.startsWith(PNG_PREFIX)) throw new Error("PNG indisponível.");
+  return image;
+}
+
+function downloadImage(image: string) {
   const link = document.createElement("a");
   link.href = image;
-  link.download = "meu-amigo-secreto.png";
+  link.download = FILE_NAME;
   document.body.append(link);
   try {
     link.click();
   } finally {
     link.remove();
   }
+}
+
+export async function saveResultImage(recipientName: string, mode: "automatic" | "download") {
+  const image = renderResultImage(recipientName);
+
+  if (
+    mode === "automatic"
+    && window.matchMedia("(pointer: coarse)").matches
+    && typeof navigator.canShare === "function"
+    && typeof navigator.share === "function"
+  ) {
+    // Mantém a ativação do toque até abrir o menu nativo com o PNG.
+    const bytes = Uint8Array.from(atob(image.slice(PNG_PREFIX.length)), (character) => character.charCodeAt(0));
+    const data = { files: [new File([bytes], FILE_NAME, { type: PNG_TYPE })] };
+    if (navigator.canShare(data)) {
+      try {
+        await navigator.share(data);
+      } catch (error) {
+        const dismissed = error instanceof DOMException && (error.name === "AbortError" || error.name === "InvalidStateError");
+        if (!dismissed) downloadImage(image);
+      }
+      return "native";
+    }
+  }
+
+  downloadImage(image);
+  return "download";
 }

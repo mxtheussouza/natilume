@@ -67,6 +67,10 @@ A suíte automatizada verifica semântica, contraste, ordem de foco, teclado e m
 5. Faça o teste de fumaça com dois nomes fictícios. Crie a sala, abra o link público em uma janela limpa, revele uma vez e confira o estado no painel. Confira o funcionamento do segundo participante até o encerramento. Nas rotas `/sala/*`, `/admin/*` e `/api/*`, mantenha o cache do proxy/CDN desativado e preserve `Cache-Control: no-store` e `Referrer-Policy: no-referrer`. Preserve também `X-Robots-Tag: noindex`.
 6. Monitore latência, erros e saturação do pool com métricas agregadas e nomes de rota parametrizados. No proxy, CDN e APM, desative logs de caminho bruto, corpos, cabeçalhos sensíveis e rastreamento de SQL com parâmetros nas rotas do app. Endereços administrativos e respostas de revelação contêm segredos.
 
+### Falha HTTP 500 ao criar uma sala
+
+Consulte os logs da função `POST /api/rooms`. O evento `[natilume] Falha interna.` informa a variável com problema ou um código reconhecido do Prisma ou da conexão. Se a consulta pública também retornar 500 para um slug válido, verifique primeiro `DATABASE_URL`, a conectividade e as migrações no banco usado pelo deploy. A criação também exige `APP_URL` com a origem pública. Na Vercel, confira as variáveis do ambiente **Production** e faça um novo deploy após alterá-las. [Variáveis de ambiente na Vercel](https://vercel.com/docs/environment-variables)
+
 ## Limites operacionais
 
 - Mínimo de dois participantes e sem teto numérico de produto. O corpo JSON tem limite de **256 KiB** para criar a sala e **1 KiB** para revelar. Títulos têm até 100 pontos de código e nomes até 80, após normalização. A comparação usa NFC e case folding simples do Unicode 17. Acentos e grafias distintas são preservados.

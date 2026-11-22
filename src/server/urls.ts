@@ -1,5 +1,6 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
+import { ConfigurationError } from "./configuration-error";
 
 export const slugPattern = /^[A-Za-z0-9_-]{22}$/;
 export const participantPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -14,11 +15,11 @@ export function hashAdminToken(token: string) {
 
 export function appUrl(path: string) {
   const configured = process.env.APP_URL;
-  if (!configured && process.env.NODE_ENV === "production") throw new Error("Configure APP_URL.");
-  const origin = new URL(configured ?? "http://localhost:3000");
-  if (!["https:", "http:"].includes(origin.protocol) || origin.username || origin.password
+  if (!configured && process.env.NODE_ENV === "production") throw new ConfigurationError("APP_URL", "missing");
+  const origin = URL.parse(configured ?? "http://localhost:3000");
+  if (!origin || !["https:", "http:"].includes(origin.protocol) || origin.username || origin.password
     || origin.pathname !== "/" || origin.search || origin.hash) {
-    throw new Error("APP_URL deve conter só a origem pública.");
+    throw new ConfigurationError("APP_URL", "invalid");
   }
   return new URL(path, origin).href;
 }

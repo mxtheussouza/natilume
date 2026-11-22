@@ -6,6 +6,6 @@ export async function GET(_: Request, { params }: { params: Promise<{ adminToken
     const room = await getAdminRoom((await params).adminToken);
     return room ? json(room) : json({ error: "Painel não encontrado." }, 404);
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "GET /api/admin/[adminToken]");
   }
 }

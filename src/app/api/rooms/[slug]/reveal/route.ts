@@ -15,6 +15,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ slu
     if (result.status === 409) return json({ error: "Esse nome já fez a revelação." }, 409);
     return json({ error: "Nome ou sala não encontrado." }, 404);
   } catch (error) {
-    return errorResponse(error);
+    return errorResponse(error, "POST /api/rooms/[slug]/reveal");
   }
 }

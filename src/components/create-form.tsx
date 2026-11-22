@@ -1,20 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState, type SubmitEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type SubmitEvent } from "react";
 import type { CreatedRoom } from "@/lib/contracts";
 import { ROOM_BODY_BYTES, tidyName, validateRoom } from "@/lib/validation";
 import { CopyLink } from "./copy-link";
 import { FestiveMark } from "./festive-mark";
 
+function participantLines(value: string) {
+  const trimmed = value.trim();
+  return trimmed ? trimmed.split(/\r?\n/u) : [];
+}
+
 export function CreateForm() {
-  const [name, setName] = useState("");
   const [names, setNames] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<CreatedRoom>();
   const heading = useRef<HTMLHeadingElement>(null);
-  const participants = names.trim() ? names.trim().split(/\r?\n/u) : [];
-  const preview = participants.map(tidyName).filter(Boolean);
+  const preview = participantLines(names).map(tidyName).filter(Boolean);
+
+  const syncNamesOnMount = useCallback((field: HTMLTextAreaElement | null) => {
+    // O campo pode receber texto antes de o React hidratar o formulário.
+    if (field) setNames(field.value);
+  }, []);
 
   useEffect(() => {
     if (created) heading.current?.focus();
@@ -23,7 +31,11 @@ export function CreateForm() {
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     if (busy) return;
-    const input = { name, participants };
+    const fields = new FormData(event.currentTarget);
+    const input = {
+      name: String(fields.get("name") ?? ""),
+      participants: participantLines(String(fields.get("participants") ?? "")),
+    };
     const validation = validateRoom(input);
     if (validation.error) {
       setError(validation.error);
@@ -45,12 +57,12 @@ export function CreateForm() {
         body,
       });
       if (!response.ok) {
-        if (response.status === 400 || response.status === 413) {
-          const failure = await response.json() as { error: string };
-          setError(failure.error);
-          return;
-        }
-        throw new Error();
+        const failure: unknown = await response.json().catch(() => null);
+        const message = failure && typeof failure === "object" && "error" in failure && typeof failure.error === "string"
+          ? failure.error
+          : "O serviço de criação de salas está indisponível agora. Tente novamente.";
+        setError(message);
+        return;
       }
       setCreated(await response.json());
     } catch {
@@ -77,11 +89,11 @@ export function CreateForm() {
     <form className="card stack" onSubmit={submit} method="post" noValidate aria-busy={busy}>
       <div className="field">
         <label htmlFor="room-name">Nome da sala</label>
-        <input id="room-name" name="name" autoComplete="off" value={name} onChange={(event) => setName(event.target.value)} required placeholder="Ex. Natal da família" />
+        <input id="room-name" name="name" autoComplete="off" required placeholder="Ex. Natal da família" />
       </div>
       <div className="field">
         <label htmlFor="names">Participantes</label>
-        <textarea id="names" name="participants" value={names} onChange={(event) => setNames(event.target.value)} required aria-describedby="names-hint" rows={7} placeholder={"Carol\nJúlia\nRafa"} />
+        <textarea id="names" name="participants" ref={syncNamesOnMount} onChange={(event) => setNames(event.currentTarget.value)} required aria-describedby="names-hint" rows={7} placeholder={"Carol\nJúlia\nRafa"} />
         <p id="names-hint" className="hint">Escreva um nome ou apelido por linha. São necessários pelo menos dois nomes distintos.</p>
       </div>
       <div className="preview">

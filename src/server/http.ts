@@ -1,4 +1,5 @@
 import "server-only";
+import { ConfigurationError } from "./configuration-error";
 
 class InputError extends Error {
   constructor(readonly status: number, message: string) {
@@ -17,9 +18,20 @@ export function json(data: unknown, status = 200) {
   });
 }
 
-export function errorResponse(error: unknown) {
+function diagnosticCode(error: unknown) {
+  if (!error || typeof error !== "object") return undefined;
+  const code = "code" in error ? error.code : "errorCode" in error ? error.errorCode : undefined;
+  if (typeof code === "string" && /^(?:P\d{4}|ERR_INVALID_URL|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ECONNRESET|ETIMEDOUT)$/u.test(code)) {
+    return code;
+  }
+}
+
+export function errorResponse(error: unknown, operation: string) {
   if (error instanceof InputError) return json({ error: error.message }, error.status);
-  console.error("[natilume] Falha interna ao consultar ou gravar dados.");
+  const details = error instanceof ConfigurationError
+    ? { variable: error.variable, problem: error.problem }
+    : { code: diagnosticCode(error) ?? "unknown" };
+  console.error("[natilume] Falha interna.", { operation, ...details });
   return json({ error: "O serviço está indisponível agora. Tente atualizar a página." }, 500);
 }
 

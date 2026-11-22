@@ -28,6 +28,44 @@ for (const width of [320, 375, 768, 1440]) {
   });
 }
 
+test("mostra os nomes digitados antes de o formulário ficar interativo", async ({ page }) => {
+  const scripts = Promise.withResolvers<void>();
+  await page.route(/\/_next\/static\/.*\.js(?:\?|$)/, async (route) => {
+    await scripts.promise;
+    await route.continue();
+  });
+
+  const names = page.getByLabel("Participantes", { exact: true });
+  try {
+    await page.goto("/criar", { waitUntil: "commit" });
+    await names.pressSequentially("Ana");
+    await names.press("Enter");
+    await names.pressSequentially("Beto");
+  } finally {
+    scripts.resolve();
+  }
+
+  const items = page.getByRole("list", { name: "Prévia de participantes" }).getByRole("listitem");
+  await expect(items).toHaveText(["Ana", "Beto"]);
+  await names.press("Enter");
+  await names.pressSequentially("Clara");
+  await expect(items).toHaveText(["Ana", "Beto", "Clara"]);
+  await names.fill("Ana\nBeto");
+  await expect(items).toHaveText(["Ana", "Beto"]);
+  await expect(page.getByText("2 nomes na lista")).toBeVisible();
+});
+
+test("exibe a mensagem HTTP 500 da API de criação", async ({ page }) => {
+  const error = "O serviço está indisponível agora. Tente atualizar a página.";
+  await page.route("**/api/rooms", (route) => route.fulfill({ status: 500, json: { error } }));
+  await page.goto("/criar");
+  await page.getByLabel("Nome da sala").fill("Natal de teste");
+  await page.getByLabel("Participantes", { exact: true }).fill("Ana\nBeto");
+  await expect(page.getByText("2 nomes na lista")).toBeVisible();
+  await page.getByRole("button", { name: "Criar sala e sortear" }).click();
+  await expect(page.getByRole("alert").filter({ hasText: error })).toBeVisible();
+});
+
 test("cria e copia um link público, revela por teclado e encerra a sala", async ({ page, context, browser }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   await page.goto("/");

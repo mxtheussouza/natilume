@@ -227,7 +227,7 @@ progress::-moz-progress-bar { background: var(--pine); border-radius: 2rem; }
 .stats dd { font: 680 clamp(1.3rem, 6vw, 2.1rem) var(--title); margin: .2rem 0 0; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
 .participant-table { border-collapse: collapse; width: 100%; }
 .participant-table th, .participant-table td { padding: .6rem .25rem; border-bottom: 1px solid var(--line); text-align: left; overflow-wrap: anywhere; }
-.participant-table :is(th, td):last-child { text-align: right; width: 1%; }
+.participant-table :is(th, td):last-child { text-align: right; }
 .status-revealed, .status-pending { display: inline-block; padding: .23rem .48rem; border-radius: .4rem; font-size: .88rem; font-weight: 700; }
 .status-revealed { color: var(--pine-dark); background: var(--sage); }
 .status-pending { color: #654818; background: var(--gold-light); }

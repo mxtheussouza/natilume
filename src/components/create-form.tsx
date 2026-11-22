@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type SubmitEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type SubmitEvent,
+} from "react";
 import type { CreatedRoom } from "@/lib/contracts";
 import { ROOM_BODY_BYTES, tidyName, validateRoom } from "@/lib/validation";
 import { CopyLink } from "./copy-link";
@@ -58,15 +64,21 @@ export function CreateForm() {
       });
       if (!response.ok) {
         const failure: unknown = await response.json().catch(() => null);
-        const message = failure && typeof failure === "object" && "error" in failure && typeof failure.error === "string"
-          ? failure.error
-          : "O serviço de criação de salas está indisponível agora. Tente novamente.";
+        const message =
+          failure &&
+          typeof failure === "object" &&
+          "error" in failure &&
+          typeof failure.error === "string"
+            ? failure.error
+            : "O serviço de criação de salas está indisponível agora. Tente novamente.";
         setError(message);
         return;
       }
       setCreated(await response.json());
     } catch {
-      setError("Não conseguimos confirmar a criação. Confira sua conexão e tente novamente.");
+      setError(
+        "Não conseguimos confirmar a criação. Confira sua conexão e tente novamente.",
+      );
     } finally {
       setBusy(false);
     }
@@ -76,34 +88,98 @@ export function CreateForm() {
     return (
       <section className="card stack">
         <FestiveMark kind="celebration" />
-        <h2 ref={heading} tabIndex={-1}>Sala criada!</h2>
-        <p>O sorteio de {created.totalParticipants} participantes está pronto.</p>
-        <CopyLink title="Link público" url={created.roomUrl} action="Copiar link público" description="Envie este mesmo link para toda a turma." />
-        <CopyLink title="Link administrativo secreto" url={created.adminUrl} action="Copiar link secreto" description="Guarde este link só para você. Ele dá acesso ao andamento da sala e é a única forma de abrir o painel. Se você perdê-lo, não há como recuperá-lo." />
-        <a className="button primary" href={created.adminUrl} target="_blank" rel="noreferrer">Abrir painel em outra aba</a>
+        <h2 ref={heading} tabIndex={-1}>
+          Sala criada!
+        </h2>
+        <p>
+          O sorteio de {created.totalParticipants} participantes está pronto.
+        </p>
+        <CopyLink
+          title="Link público"
+          url={created.roomUrl}
+          action="Copiar link público"
+          description="Envie este mesmo link para toda a turma."
+        />
+        <CopyLink
+          title="Link administrativo secreto"
+          url={created.adminUrl}
+          action="Copiar link secreto"
+          description="Guarde este link só para você. Ele dá acesso ao andamento da sala e é a única forma de abrir o painel. Se você perdê-lo, não há como recuperá-lo."
+        />
+        <a
+          className="button primary"
+          href={created.adminUrl}
+          target="_blank"
+          rel="noreferrer"
+        >
+          Abrir painel em outra aba
+        </a>
       </section>
     );
   }
 
   return (
-    <form className="card stack" onSubmit={submit} method="post" noValidate aria-busy={busy}>
+    <form
+      className="card stack"
+      onSubmit={submit}
+      method="post"
+      noValidate
+      aria-busy={busy}
+    >
       <div className="field">
         <label htmlFor="room-name">Nome da sala</label>
-        <input id="room-name" name="name" autoComplete="off" required placeholder="Ex. Natal da família" />
+        <input
+          id="room-name"
+          name="name"
+          autoComplete="off"
+          required
+          placeholder="Ex. Natal da família"
+        />
       </div>
       <div className="field">
         <label htmlFor="names">Participantes</label>
-        <textarea id="names" name="participants" ref={syncNamesOnMount} onChange={(event) => setNames(event.currentTarget.value)} required aria-describedby="names-hint" rows={7} placeholder={"Carol\nJúlia\nRafa"} />
-        <p id="names-hint" className="hint">Escreva um nome ou apelido por linha. São necessários pelo menos dois nomes distintos.</p>
+        <textarea
+          id="names"
+          name="participants"
+          ref={syncNamesOnMount}
+          onChange={(event) => setNames(event.currentTarget.value)}
+          required
+          aria-describedby="names-hint"
+          rows={7}
+          placeholder={"Carol\nAna\nRafa"}
+        />
+        <p id="names-hint" className="hint">
+          Escreva um nome ou apelido por linha. São necessários pelo menos dois
+          nomes distintos.
+        </p>
       </div>
       <div className="preview">
-        <p>{preview.length === 1 ? "1 nome na lista" : `${preview.length} nomes na lista`}</p>
-        {preview.length > 0 && <ul aria-label="Prévia de participantes">{preview.slice(0, 8).map((item, index) => <li key={index}>{item}</li>)}</ul>}
+        <p>
+          {preview.length === 1
+            ? "1 nome na lista"
+            : `${preview.length} nomes na lista`}
+        </p>
+        {preview.length > 0 && (
+          <ul aria-label="Prévia de participantes">
+            {preview.slice(0, 8).map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        )}
         {preview.length > 8 && <p>Mais {preview.length - 8} na lista.</p>}
       </div>
-      <p className="hint">Quem tiver o link público pode escolher um nome disponível. Combinem de escolher apenas o próprio nome.</p>
-      {error && <p className="notice error" role="alert">{error}</p>}
-      <button className="button primary" type="submit" disabled={busy}>{busy ? "Preparando a sala…" : "Criar sala e sortear"}</button>
+      <p className="hint">
+        Quem tiver o link público pode escolher um nome disponível. Combinem de
+        escolher apenas o próprio nome.
+      </p>
+      {error && (
+        <p className="notice error" role="alert">
+          {error}
+        </p>
+      )}
+      <button className="button primary" type="submit" disabled={busy}>
+        {busy ? "Preparando a sala…" : "Criar sala e sortear"}
+      </button>
     </form>
   );
 }
